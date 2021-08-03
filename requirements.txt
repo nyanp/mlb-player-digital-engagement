@@ -1,0 +1,6 @@
+ujson
+pandas
+numpy
+nyaggle
+pyarrow>=3.0.0
+wandb==0.9.7

@@ -1,0 +1,33 @@
+name: Upload
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload:
+    name: Upload
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: harupy/push-kaggle-kernel@master
+        env:
+          # Do not leak your credentials.
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        with:
+          id: nyanpn/mlb-inference
+          title: mlb inference
+          code_file: notebook/mlb-inference.ipynb
+          language: python
+          kernel_type: notebook
+          # Do not share high-scoring kernels.
+          is_private: true
+          competition_sources: |
+            mlb-player-digital-engagement-forecasting
+          dataset_sources: |
+            nyanpn/mlb-dataset
+            nyanpn/mlb-feature-data
+          enable_gpu:
+            false
