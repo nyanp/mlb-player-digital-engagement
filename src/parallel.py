@@ -1,14 +1,11 @@
 # make features in parallel
 import multiprocessing
-import json
 import shutil
 import time
-import pandas as pd
 
-from src.store import Store
-from src.features import *
 from src.feature import *
 from src.parser import *
+from src.dataset_helper import load_subdata
 
 _n_process_total = None
 _feature_name = None
@@ -21,12 +18,7 @@ _use_updated = True
 
 
 def _base_df(data_dir: str, updated: bool):
-    if updated:
-        return make_df_base_from_train_engagement(
-            pd.read_feather(os.path.join(data_dir, 'train_nextDayPlayerEngagement_updated.f')))
-    else:
-        return make_df_base_from_train_engagement(
-            pd.read_feather(os.path.join(data_dir, 'train_nextDayPlayerEngagement.f')))
+    return load_subdata(data_dir, 'nextDayPlayerEngagement', updated)
 
 
 def _make_feature(data_dir: str, output_dir: str, feature_name: str, index: int, in_total: int,
@@ -41,7 +33,7 @@ def _make_feature(data_dir: str, output_dir: str, feature_name: str, index: int,
     logger.debug("start processing")
 
     # ピークをずらす
-    time.sleep(index*2)
+    time.sleep(index * 2)
 
     def _dec(v):
         try:
@@ -69,7 +61,7 @@ def _make_feature(data_dir: str, output_dir: str, feature_name: str, index: int,
         if index == in_total - 1:
             base_df = base_df.iloc[start:]
         else:
-            base_df = base_df.iloc[start:start+stride]
+            base_df = base_df.iloc[start:start + stride]
 
         logger.debug(f"start feature generation, total {len(base_df)} rows")
 
@@ -150,10 +142,10 @@ def make_feture_parallel(data_dir: str,
 
 
 def merge_feture_parallel(data_dir: str,
-                         feature_name: str,
-                         n_process: int = 32,
-                         feature_store: str = '../features',
-                         lag_requirements: int = 45,
+                          feature_name: str,
+                          n_process: int = 32,
+                          feature_store: str = '../features',
+                          lag_requirements: int = 45,
                           use_updated: bool = True):
     fingerprint = get_fingerprint(_base_df(data_dir, use_updated))
     feature_name = normalize_feature_name(feature_name)
