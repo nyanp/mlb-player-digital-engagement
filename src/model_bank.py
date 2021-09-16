@@ -45,7 +45,7 @@ def ensemble(lag, pred_gbdt, pred_mlp, pred_cnn):
     mixed = np.zeros_like(pred_gbdt)
 
     for i in range(4):
-        tgt = f"target{i+1}"
+        tgt = f"target{i + 1}"
         w = get_mix_ratio(lag, tgt)
         mixed[:, i] = (w[0] * pred_gbdt[:, i] + w[1] * pred_cnn[:, i] + w[2] * pred_mlp[:, i]) / (w[0] + w[1] + w[2])
 
@@ -131,11 +131,16 @@ class ModelBank:
             self.lag2gbdts[lag] = []
             for i in range(4):
                 if num_seeds == 1:
-                    booster = lgb.Booster(model_file=os.path.join(model_path, 'gbdt_new', f'model_target{i + 1}_lag{lag}.bin'))
+                    booster = lgb.Booster(
+                        model_file=os.path.join(model_path, 'gbdt_new', f'model_target{i + 1}_lag{lag}.bin'))
                 else:
                     booster = EnsembleModel(
-                        [lgb.Booster(model_file=os.path.join(model_path, 'gbdt_new', f'model_target{i + 1}_lag{lag}_seed{s}.bin')) for s in range(num_seeds)] +
-                        [lgb.Booster(model_file=os.path.join(model_path, 'gbdt_new2', f'model_target{i + 1}_lag{lag}_seed{s}.bin')) for s in range(num_seeds)]
+                        [lgb.Booster(model_file=os.path.join(model_path, 'gbdt_new',
+                                                             f'model_target{i + 1}_lag{lag}_seed{s}.bin')) for s in
+                         range(num_seeds)] +
+                        [lgb.Booster(model_file=os.path.join(model_path, 'gbdt_new2',
+                                                             f'model_target{i + 1}_lag{lag}_seed{s}.bin')) for s in
+                         range(num_seeds)]
                     )
                 self.lag2gbdts[lag].append(booster)
 

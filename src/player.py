@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,6 @@ from src.row import Row
 from src.streamdf import TimeSeriesStream
 from src.team import Teams, Team
 from src.util import catch_everything_in_kaggle
-
 
 PLAYER_POSITION_FEATURES = [
     'positionCode',

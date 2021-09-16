@@ -1,6 +1,5 @@
-from typing import List, Any
 from dataclasses import dataclass
-import numpy as np
+from typing import List, Any
 
 
 @dataclass

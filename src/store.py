@@ -1,6 +1,5 @@
 import gc
 import os
-import traceback
 import warnings
 from collections import defaultdict
 from typing import Dict, List, Optional
@@ -151,7 +150,8 @@ class Store:
 
         }
 
-        team_agg = event_df.groupby(['teamId'])[[f'predicted{i + 1}' for i in range(4)]].agg(['max', 'mean']).reset_index()
+        team_agg = event_df.groupby(['teamId'])[[f'predicted{i + 1}' for i in range(4)]].agg(
+            ['max', 'mean']).reset_index()
         cols = ['teamId']
         for i in range(4):
             tgt = f"target{i + 1}"

@@ -1,16 +1,11 @@
-
-import copy
-import os
 import sys
 import time
 from contextlib import contextmanager
 
-
 sys.path.append('../')
 
-from src.feature import *
 from src.store import *
-from src.parser import *
+
 
 @contextmanager
 def timer(name):
@@ -18,6 +13,7 @@ def timer(name):
     yield
     elapsed = time.time() - s
     print(f"[{name}] {elapsed:.3f}s")
+
 
 TARGET_COLS = ['target1', 'target2', 'target3', 'target4']
 DATA_DIR = '../input/mlb-player-digital-engagement-forecasting'

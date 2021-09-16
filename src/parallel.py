@@ -1,11 +1,17 @@
 # make features in parallel
+import json
 import multiprocessing
+import os
 import shutil
 import time
 
-from src.feature import *
-from src.parser import *
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+
 from src.dataset_helper import load_subdata
+from src.feature import Context, get_features, get_fingerprint, normalize_feature_name, get_feature_path
+from src.store import Store
 
 _n_process_total = None
 _feature_name = None

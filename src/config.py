@@ -6,8 +6,8 @@ from typing import Dict, List, Optional, Union
 class Config:
     lags: List[int]
     features: List[str]
-    features_per_lag: Optional[Dict[int, List[str]]]=None
-    features_per_target: Optional[Dict[str, List[str]]]=None
+    features_per_lag: Optional[Dict[int, List[str]]] = None
+    features_per_target: Optional[Dict[str, List[str]]] = None
     select_features: Optional[List[str]] = None
     train_new_users_only: bool = False  # use only playerForTestSetAndFuturePreds=True for training
     on_season_only: bool = True  # use only on-season data for training
@@ -57,4 +57,3 @@ class NNConfig:
     cnn_celu: bool
 
     seeds: List[int]
-

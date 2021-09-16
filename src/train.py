@@ -80,7 +80,7 @@ def make_cv_splits(gap_days: int, train_days: int, lag_req: int, validation_star
     def _valid_range(start_time):
         # use fix time-period for validation
         return start_time, np.datetime64(start_time) + np.timedelta64(30, 'D')
-        #return start_time, np.datetime64(start_time) + np.timedelta64(lag_req + 2, 'D'),
+        # return start_time, np.datetime64(start_time) + np.timedelta64(lag_req + 2, 'D'),
 
     def _train_start(validation_start_time):
         return _train_end(validation_start_time) - np.timedelta64(train_days, 'D')

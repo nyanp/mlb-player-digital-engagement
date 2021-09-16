@@ -291,7 +291,7 @@ class CNN(nn.Module):
         self.conv1 = nn.Sequential(
             nn.BatchNorm1d(channel_1),
             nn.Dropout(dropout_top),
-            _norm(nn.Conv1d(channel_1, channel_2, kernel_size=kernel1, stride=1, padding=kernel1//2, bias=False)),
+            _norm(nn.Conv1d(channel_1, channel_2, kernel_size=kernel1, stride=1, padding=kernel1 // 2, bias=False)),
             nn.ReLU(),
             nn.AdaptiveAvgPool1d(output_size=cha_po_1),
             nn.BatchNorm1d(channel_2),
