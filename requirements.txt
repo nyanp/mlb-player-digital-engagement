@@ -1,7 +1,6 @@
-
-ujson
-pandas
+jupyterlab
+lightgbm==3.2.1
 numpy
-nyaggle
+pandas
 pyarrow>=3.0.0
 wandb==0.9.7
