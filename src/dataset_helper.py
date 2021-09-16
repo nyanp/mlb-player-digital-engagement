@@ -38,6 +38,7 @@ def load_subdata(data_dir: str, name: str, use_updated: bool):
                 pass
 
         events = pd.DataFrame(eng)
+        assert len(events)
         events.to_feather(path)
         del train
 
