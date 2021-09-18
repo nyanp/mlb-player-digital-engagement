@@ -12,6 +12,7 @@ from tqdm import tqdm
 from src.dataset_helper import load_subdata
 from src.feature import Context, get_features, get_fingerprint, normalize_feature_name, get_feature_path
 from src.store import Store
+from src.parser import make_df_base_from_train_engagement
 
 _n_process_total = None
 _feature_name = None
@@ -24,7 +25,7 @@ _use_updated = True
 
 
 def _base_df(data_dir: str, updated: bool):
-    return load_subdata(data_dir, 'nextDayPlayerEngagement', updated)
+    return make_df_base_from_train_engagement(load_subdata(data_dir, 'nextDayPlayerEngagement', updated))
 
 
 def _make_feature(data_dir: str, output_dir: str, feature_name: str, index: int, in_total: int,
