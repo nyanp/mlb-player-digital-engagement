@@ -70,6 +70,8 @@ Run the notebooks in the following order.
   - Only this notebook is recommended to be run on a GPU-equipped environment.
 - 06_ensemble.ipynb
 
+![](docs/img/mlb%20dataflow.png)
+
 ## 4. upload artifacts to kaggle environment
 After all the scripts have been run, you should have a trained model and some data files under the `notebook/artifacts/` folder. 
 Upload this file as a Kaggle Dataset.
