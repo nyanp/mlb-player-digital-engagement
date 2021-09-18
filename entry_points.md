@@ -17,6 +17,8 @@ Here are the steps to reproduce it. The specs of the GCP instance I used are as 
 > sh Anaconda3-2021.05-Linux-x86_64.sh
 > tmux
 
+> conda create -n mlb python=3.7
+> source activate mlb
 > git clone https://github.com/nyanp/mlb-player-digital-engagement
 > cd mlb-player-digital-engagement
 > pip install -r requirements.txt
@@ -33,6 +35,11 @@ If you are using [the official Kaggle API](https://github.com/Kaggle/kaggle-api)
 > kaggle competitions download -c mlb-player-digital-engagement-forecasting
 > unzip -d mlb-player-digital-engagement-forecasting mlb-player-digital-engagement-forecasting.zip
 ```
+
+> Note: `train_updated.csv` that can be downloaded from kaggle seems to have been replaced with data up to 2021/07/31 
+at the time of rerun, instead of data at the time of the competition. 
+We need the 2021/07/17 version of `train_updated.csv` to accurately reproduce the model I used for my inference.
+
 
 When the download and unzip is finished, the directory structure should look like this:
 
@@ -64,7 +71,7 @@ Run the notebooks in the following order.
 - 06_ensemble.ipynb
 
 ## 4. upload artifacts to kaggle environment
-After all the scripts have been run, you should have a trained model and some data files under the `artifacts/` folder. 
+After all the scripts have been run, you should have a trained model and some data files under the `notebook/artifacts/` folder. 
 Upload this file as a Kaggle Dataset.
 
 ## 5. upload inference notebook

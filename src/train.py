@@ -173,7 +173,7 @@ def train_single_lag(params: Union[Dict, List[Dict]],
                      lag_req: int,
                      train_config: Config,
                      season_df: pd.DataFrame = None,
-                     run=None,
+                     wandb_run=None,
                      log_config: bool = False,
                      sample_weight_func=None,
                      extra_df: pd.DataFrame = None,
@@ -182,10 +182,10 @@ def train_single_lag(params: Union[Dict, List[Dict]],
                      drop_features: Optional[List[str]] = None):
     print(f"lag: {lag_req}")
 
-    if run is None:
-        run = wandb.init(project='mlb', entity='nyanp')
+    #if run is None:
+    #    run = wandb.init(project='mlb', entity='nyanp')
 
-    config = wandb.config
+    #config = wandb.config
 
     df_train = df_train.copy()
 
@@ -232,17 +232,17 @@ def train_single_lag(params: Union[Dict, List[Dict]],
         raise NotImplementedError()
 
     # 4-weeks
-    print(f'lag requirements: {config.lag_requirements}')
-    print(f'gap days: {config.gap_days}')
+    #print(f'lag requirements: {config.lag_requirements}')
+    #print(f'gap days: {config.gap_days}')
     print(f'shape: {X_orig.shape}')
 
     splits = make_cv_splits(train_config.gap_days, train_config.train_days, lag_req, use_updated=store.use_updated)
     split_for_train = ('2015-10-01', '2021-10-01')
 
-    if log_config:
-        config.features = list(X_orig.columns)
-        config.n_features = len(X_orig.columns)
-        config.update({f'cv_period{i}': splits[i] for i in range(len(splits))})
+    #if log_config:
+    #    config.features = list(X_orig.columns)
+    #    config.n_features = len(X_orig.columns)
+    #    config.update({f'cv_period{i}': splits[i] for i in range(len(splits))})
 
     all_metrics = np.zeros((len(splits), len(TARGET_COLS)))
 
@@ -284,12 +284,14 @@ def train_single_lag(params: Union[Dict, List[Dict]],
         np.save(os.path.join(output_dir, f"{tgt}_lag{lag_req}_oof.npy"), oof)
         np.save(os.path.join(output_dir, f"{tgt}_lag{lag_req}_indices.npy"), valid_indices)
 
-        for cv_idx in range(len(splits)):
-            wandb.run.summary[f"{tgt}_cv{cv_idx}_lag{lag_req}"] = all_metrics[cv_idx, tgt_index] = maes[cv_idx]
-
         iteration_for_test = int(1.1 * np.mean(iterations))
-        wandb.run.summary[f"{tgt}_lag{lag_req}"] = np.mean(maes)
-        wandb.run.summary[f"{tgt}_lag{lag_req}_iterations"] = iteration_for_test
+
+        if wandb_run is not None:
+            for cv_idx in range(len(splits)):
+                wandb.run.summary[f"{tgt}_cv{cv_idx}_lag{lag_req}"] = all_metrics[cv_idx, tgt_index] = maes[cv_idx]
+
+            wandb.run.summary[f"{tgt}_lag{lag_req}"] = np.mean(maes)
+            wandb.run.summary[f"{tgt}_lag{lag_req}_iterations"] = iteration_for_test
 
         if train_config.train_full:
             for seed_round in range(num_seeds):
@@ -312,32 +314,37 @@ def train_single_lag(params: Union[Dict, List[Dict]],
                 else:
                     model_path = os.path.join(output_dir, f'model_{tgt}_lag{lag_req}_seed{seed_round}.bin')
                 clf.booster_.save_model(model_path)
-                save_file(model_path)
+
+                if wandb_run is not None:
+                    save_file(model_path)
 
         try:
             plot_importance(pd.concat(importances), f"importance_{tgt}_lag{lag_req}.png")
-            save_file(f"importance_{tgt}_lag{lag_req}.png")
+            if wandb_run is not None:
+                save_file(f"importance_{tgt}_lag{lag_req}.png")
         except Exception:
             print(f"save artifacts failed.")
             print(traceback.format_exc())
 
-    for i in range(len(splits)):
-        run.summary[f'cv{i}_lag{lag_req}'] = np.mean(all_metrics, axis=1)[i]
+    if wandb_run is not None:
+        for i in range(len(splits)):
+            wandb_run.summary[f'cv{i}_lag{lag_req}'] = np.mean(all_metrics, axis=1)[i]
 
-    run.summary[f'lag{lag_req}'] = np.mean(all_metrics)
+        wandb_run.summary[f'lag{lag_req}'] = np.mean(all_metrics)
 
 
-def train(params,
+def train(params: Union[List[Dict], Dict],
           df_train_orig: pd.DataFrame,
           store: Store,
           train_config: Config,
-          run_name=None,
           season_df=None,
           sample_weight_func=None,
           extra_df: pd.DataFrame = None,
           output_dir: str = 'artifacts',
           num_seeds: int = 1,
-          upload_dir: Optional[str] = None):
+          upload_dir: Optional[str] = None,
+          wandb_project_name: Optional[str] = None,
+          wandb_entity_name: Optional[str] = None):
     os.makedirs(output_dir, exist_ok=True)
     upload_dir = upload_dir or output_dir
     if train_config.upload:
@@ -345,60 +352,62 @@ def train(params,
 
     try:
         lag_requirements = train_config.lags or [45]
-        run = wandb.init(project='mlb', entity='nyanp')
-        config = wandb.config
-
-        if run_name:
-            run.name = run_name
 
         if not isinstance(params, list):
             params = [params] * 4
 
-        config.params1 = params[0]
-        config.params2 = params[1]
-        config.params3 = params[2]
-        config.params4 = params[3]
-        config.feature_set = list(train_config.features)
-        config.train_full = train_config.train_full
-        config.train_new_users_only = train_config.train_new_users_only
-        config.lag_requirements = lag_requirements
-        config.gap_days = train_config.gap_days
-        config.select_features = train_config.select_features
-        config.on_season_only = train_config.on_season_only
-        config.train_days = train_config.train_days
-        config.trim_by_season_df = season_df is not None
-        config.sample_weight_func = sample_weight_func.__name__ if sample_weight_func is not None else None
-        config.features_per_lag = train_config.features_per_lag
-        config.features_per_target = train_config.features_per_target
-        config.weight_new_users = train_config.weight_new_users
-        config.num_seeds = num_seeds
-        config.use_updated = store.use_updated
-        config.drop_features = train_config.drop_features
-        config.second_order_features = train_config.second_order_features
-
-        if extra_df is not None:
-            config.extra_cols = list(extra_df.columns)
-            config.extra_df_on = train_config.extra_df_on
+        if wandb_project_name and wandb_entity_name:
+            wandb_run = wandb.init(project=wandb_project_name, entity=wandb_entity_name)
+            wandb_config = wandb.config
+            wandb_config.params1 = params[0]
+            wandb_config.params2 = params[1]
+            wandb_config.params3 = params[2]
+            wandb_config.params4 = params[3]
+            wandb_config.feature_set = list(train_config.features)
+            wandb_config.train_full = train_config.train_full
+            wandb_config.train_new_users_only = train_config.train_new_users_only
+            wandb_config.lag_requirements = lag_requirements
+            wandb_config.gap_days = train_config.gap_days
+            wandb_config.select_features = train_config.select_features
+            wandb_config.on_season_only = train_config.on_season_only
+            wandb_config.train_days = train_config.train_days
+            wandb_config.trim_by_season_df = season_df is not None
+            wandb_config.sample_weight_func = sample_weight_func.__name__ if sample_weight_func is not None else None
+            wandb_config.features_per_lag = train_config.features_per_lag
+            wandb_config.features_per_target = train_config.features_per_target
+            wandb_config.weight_new_users = train_config.weight_new_users
+            wandb_config.num_seeds = num_seeds
+            wandb_config.use_updated = store.use_updated
+            wandb_config.drop_features = train_config.drop_features
+            wandb_config.second_order_features = train_config.second_order_features
+            if extra_df is not None:
+                wandb_config.extra_cols = list(extra_df.columns)
+                wandb_config.extra_df_on = train_config.extra_df_on
+        else:
+            wandb_run = None
 
         for lag_index, lag_req in enumerate(lag_requirements):
             feature_set = list(train_config.features)
             if train_config.features_per_lag is not None:
                 feature_set += train_config.features_per_lag.get(lag_req, [])
             train_single_lag(params, df_train_orig, store, feature_set, lag_req, train_config,
-                             season_df=season_df, run=run,
+                             season_df=season_df, wandb_run=wandb_run,
                              log_config=lag_index == 0,
                              sample_weight_func=sample_weight_func,
                              extra_df=extra_df,
                              output_dir=output_dir,
                              num_seeds=num_seeds,
-                             drop_features=config.drop_features)
-        wandb.join()
+                             drop_features=train_config.drop_features)
+
+        if wandb_run is not None:
+            wandb.join()
 
         if train_config.upload:
             # copy wandb's artifacts to output directory
-            shutil.copy(os.path.join(wandb.run.dir, 'config.yaml'), output_dir)
-            shutil.copy(os.path.join(wandb.run.dir, 'wandb-summary.json'), output_dir)
-            shutil.copy(os.path.join(wandb.run.dir, 'wandb-metadata.json'), output_dir)
+            if wandb_run is not None:
+                shutil.copy(os.path.join(wandb.run.dir, 'config.yaml'), output_dir)
+                shutil.copy(os.path.join(wandb.run.dir, 'wandb-summary.json'), output_dir)
+                shutil.copy(os.path.join(wandb.run.dir, 'wandb-metadata.json'), output_dir)
             # uplooad
             save_directory_as_kaggle_dataset(upload_dir, "mlb dataset", "mlb-dataset")
     except Exception:
